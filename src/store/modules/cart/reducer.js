@@ -20,9 +20,6 @@ export default function cart(state = [], action) {
                     });
                 }
 
-                if (qtdStock == 0) {
-                    throw new Error('Sem estoque')
-                }
 
                 console.log(qtdStock)
 
