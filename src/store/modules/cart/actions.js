@@ -12,11 +12,19 @@ export function removeFromCart(id) {
     };
 }
 
-export function updateAmount(id, amount) {
+export function updateAmount(id, quantityCart) {
     return {
         type: 'UPDATE_AMOUNT',
         id,
-        amount,
+        quantityCart,
+    };
+}
+
+export function updateStock(id, quantity) {
+    return {
+        type: 'UPDATE_STOCK',
+        id,
+        quantity,
     };
 }
 

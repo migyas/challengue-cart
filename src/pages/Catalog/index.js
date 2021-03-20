@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Grid, Modal, Paper } from '@material-ui/core';
 import AddShoppingCartOutlinedIcon from '@material-ui/icons/AddShoppingCartOutlined';
+import { useDispatch, useSelector } from 'react-redux'
 
 import api from '../../services/api'
 import * as S from './styled';
 import Menu from '../../components/Menu';
+import * as CartActions from '../../store/modules/cart/actions';
 
 
 const Catalog = () => {
     const [products, setProducts] = useState([]);
     const [details, setDetails] = useState({});
-
     const [status, setStatus] = useState({});
+    const [open, setOpen] = useState(false);
 
-    const [open, setOpen] = React.useState(false);
+    const dispatch = useDispatch();
 
     const handleOpen = () => {
         setOpen(true);
@@ -34,6 +36,35 @@ const Catalog = () => {
         }
     };
 
+    const handleAddProductToCart = useCallback((product) => {
+        dispatch(CartActions.addToCart(product) );
+
+    }, [dispatch]);
+
+    const buyButton = (product) => {
+
+        if (product.quantity > 0 || product.quantityCart < product.quantity) {
+            return (
+                <Button fullWidth onClick={() => handleAddProductToCart(product)} style={{ backgroundColor: 'yellowgreen', color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
+                    Comprar
+                    <AddShoppingCartOutlinedIcon fontSize="large" style={{ marginLeft: '1rem' }} />
+                </Button>
+            )
+        } else {
+            <Button disabled fullWidth variant="contained" style={{ color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
+                Comprar (Sem Estoque)
+            </Button>
+        }
+
+        return (
+            <Button disabled fullWidth variant="contained" style={{ color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
+                Comprar (Sem Estoque)
+            </Button>
+        )
+
+    }
+
+
 
     useEffect(async () => {
         const response = await api.get('/products');
@@ -47,9 +78,6 @@ const Catalog = () => {
         getProduct();
 
     }, []);
-
-    console.log('Log', details.picture);
-
 
     return (
         <S.Container>
@@ -93,10 +121,7 @@ const Catalog = () => {
                             <p style={{ fontSize: '1.5rem' }}>{details.description}</p>
                         </Grid>
                         <Grid container item>
-                            <Button fullWidth style={{ backgroundColor: 'yellowgreen', color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
-                                Comprar
-                                <AddShoppingCartOutlinedIcon fontSize="large" style={{ marginLeft: '1rem' }} />
-                            </Button>
+                            {buyButton(details)}
                         </Grid>
                     </Grid>
                 </Paper>
