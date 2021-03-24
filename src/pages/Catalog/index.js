@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button, Grid, Modal, Paper } from '@material-ui/core';
-import AddShoppingCartOutlinedIcon from '@material-ui/icons/AddShoppingCartOutlined';
+import { AddShoppingCartOutlined, CloseOutlined } from '@material-ui/icons';
 import { useDispatch, useSelector } from 'react-redux'
+import { useHistory } from 'react-router';
 
 import api from '../../services/api'
 import * as S from './styled';
@@ -14,6 +15,14 @@ const Catalog = () => {
     const [details, setDetails] = useState({});
     const [status, setStatus] = useState({});
     const [open, setOpen] = useState(false);
+    const history = useHistory();
+
+
+    const productsCart = useSelector(state => state.cart.map(product => ({
+        ...product,
+        quantityCart: product.quantityCart,
+    })));
+
 
     const dispatch = useDispatch();
 
@@ -25,7 +34,7 @@ const Catalog = () => {
         setOpen(false);
     };
 
-    const getProduct = async (id) => {
+    const getProduct = useCallback(async (id) => {
         try {
             const response = await api.get(`/products/${id}`);
             setDetails(response.data)
@@ -34,55 +43,66 @@ const Catalog = () => {
         } catch (e) {
             console.log('Erro do get ' + e)
         }
-    };
 
-    const handleAddProductToCart = useCallback((product) => {
-        dispatch(CartActions.addToCart(product) );
+    }, []);
 
-    }, [dispatch]);
+    useEffect(() => {
+        async function getProducts() {
+            const response = await api.get('/products');
+            setProducts(response.data);
+            setStatus(response.status);
+        };
+
+        getProducts();
+
+    }, [])
+
+    const handleAddProductToCart = useCallback(async (product) => {
+
+        const cartItemIndex = await productsCart.find(e => e.id === product.id);
+
+        if (product.quantity > cartItemIndex?.quantityCart) {
+            dispatch(CartActions.addToCart(product));
+            history.push('/cart')
+
+        } else if (cartItemIndex === undefined) {
+            dispatch(CartActions.addToCart(product));
+            history.push('/cart')
+
+        } else {
+            alert('Quantidade de estoque no limite.');
+            setOpen(false);
+        }
+
+    }, [dispatch, productsCart, history]);
+
+    console.log('RESULTADO DO PRODUTOS', productsCart.map(e => e))
+
 
     const buyButton = (product) => {
 
-        if (product.quantity > 0 || product.quantityCart < product.quantity) {
+        if (product.quantity > 0) {
             return (
                 <Button fullWidth onClick={() => handleAddProductToCart(product)} style={{ backgroundColor: 'yellowgreen', color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
                     Comprar
-                    <AddShoppingCartOutlinedIcon fontSize="large" style={{ marginLeft: '1rem' }} />
+                    <AddShoppingCartOutlined fontSize="large" style={{ marginLeft: '1rem' }} />
                 </Button>
             )
-        } else {
-            <Button disabled fullWidth variant="contained" style={{ color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
-                Comprar (Sem Estoque)
-            </Button>
         }
 
         return (
-            <Button disabled fullWidth variant="contained" style={{ color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
-                Comprar (Sem Estoque)
+            <Button fullWidth variant="contained" style={{ color: '#fff', fontSize: '1.5rem', height: '5rem' }}>
+                Comprar
             </Button>
         )
 
     }
 
 
-
-    useEffect(async () => {
-        const response = await api.get('/products');
-        setProducts(response.data);
-
-        setStatus(response.status);
-
-    }, []);
-
-    useEffect(() => {
-        getProduct();
-
-    }, []);
-
     return (
         <S.Container>
             <Menu />
-            <S.List container xs={8} direction="column">
+            <S.List container xs direction="column">
                 <h1>Listagem de Produtos</h1>
 
                 {products.map(i =>
@@ -103,8 +123,7 @@ const Catalog = () => {
                 <Paper
                     elevation={3}
                     style={{
-                        width: '60rem',
-                        height: '75rem',
+                        maxWidth: '50rem',
                         backgroundColor: '#fff',
                         position: 'absolute',
                         top: '50%',
@@ -112,13 +131,16 @@ const Catalog = () => {
                         transform: 'translate(-50%, -50%)',
                         borderRadius: '5px',
                     }}>
-                    <Grid container item xs={12} direction="column" alignItems="center" style={{ padding: '2rem' }}>
-                        <h1>{details.price?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</h1>
+                    <Grid container direction="column" alignItems="center" style={{ minWidth: '35rem' }} >
+                        <Button onClick={() => handleClose()}>
+                            <CloseOutlined />
+                        </Button>
+                        <h1 style={{ marginTop: '2rem' }}>{details.price?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</h1>
                         <span style={{ fontSize: '1.7rem' }}>({details.quantity}) un</span>
-                        <Grid container justify="center" style={{ padding: '1.5rem', marginTop: '1.5rem', height: '60rem' }}>
+                        <Grid container justify="center" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
                             <img src={details.picture} alt="product img" style={{ width: '15rem', height: '15rem' }} />
                             <h2>{details.title}</h2>
-                            <p style={{ fontSize: '1.5rem' }}>{details.description}</p>
+                            <p style={{ fontSize: '1.2rem' }}>{details.description}</p>
                         </Grid>
                         <Grid container item>
                             {buyButton(details)}
@@ -126,6 +148,7 @@ const Catalog = () => {
                     </Grid>
                 </Paper>
             </Modal>
+
         </S.Container>
     );
 }

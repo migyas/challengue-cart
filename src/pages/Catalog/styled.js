@@ -11,6 +11,7 @@ export const Container = styled.div`
 export const List = styled(Grid)`
     margin-top: 2rem;
     margin-bottom: 2rem;
+    padding: 1rem 2rem;
 
     h1 {
         color: #222;

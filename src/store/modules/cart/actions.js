@@ -20,16 +20,18 @@ export function updateAmount(id, quantityCart) {
     };
 }
 
-export function updateStock(id, quantity) {
+export function finishCart(id, quantityCart, quantity) {
     return {
-        type: 'UPDATE_STOCK',
+        type: 'FINISH_CART',
         id,
-        quantity,
+        quantityCart,
+        quantity
     };
 }
 
-export function RESET_ACTION()  {
+
+export function RESET_ACTION() {
     return {
         type: "RESET"
-  }
+    }
 }

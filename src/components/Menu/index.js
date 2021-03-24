@@ -23,7 +23,7 @@ const Menu = () => {
             </Link>
             <Grid>
                 <h2>Total das compras: {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</h2>
-            </Grid>
+            </Grid> 
         </>
     );
 }
